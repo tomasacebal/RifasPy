@@ -1,15 +1,11 @@
 ﻿# API REST de Rifas
 
-API REST simple y funcional para administrar rifas con Flask y SQLite.
-
 ## Requisitos
 - Python 3.10 o superior
 - pip
 
 ## Instalacion
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
