@@ -1,4 +1,4 @@
-﻿"""Utilidades para conexion e inicializacion de SQLite."""
+"""Utilidades para conexion e inicializacion de SQLite."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS rifas (
     nombre TEXT NOT NULL,
     telefono TEXT,
     mail TEXT,
+    pagado INTEGER,
     timestamp TEXT NOT NULL
 );
 """
@@ -74,7 +75,26 @@ def init_db() -> None:
 
     connection = get_db()
     connection.executescript(SCHEMA_SQL)
+    ensure_rifas_schema(connection)
     connection.commit()
+
+
+def ensure_rifas_schema(connection: sqlite3.Connection) -> None:
+    """Aplica cambios incrementales al schema de rifas.
+
+    Args:
+        connection: Conexion SQLite activa.
+
+    Returns:
+        No retorna ningun valor.
+    """
+
+    columns = {
+        row["name"]
+        for row in connection.execute("PRAGMA table_info(rifas)").fetchall()
+    }
+    if "pagado" not in columns:
+        connection.execute("ALTER TABLE rifas ADD COLUMN pagado INTEGER")
 
 
 def init_database(app: Flask) -> None:

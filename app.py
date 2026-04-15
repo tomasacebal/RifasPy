@@ -1,10 +1,10 @@
-﻿"""Factory principal para crear la aplicacion Flask."""
+"""Factory principal para crear la aplicacion Flask."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from flask import Flask
+from flask import Flask, Request, Response, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, NotFound
 
 from config import Config
@@ -37,10 +37,43 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         app.config.update(test_config)
 
     init_database(app)
+    register_cors(app)
     app.register_blueprint(rifas_bp, url_prefix=app.config["API_PREFIX"])
     register_error_handlers(app)
 
     return app
+
+
+def register_cors(app: Flask) -> None:
+    """Configura headers CORS permisivos para toda la API.
+
+    Args:
+        app: Aplicacion Flask a configurar.
+
+    Returns:
+        No retorna ningun valor.
+    """
+
+    @app.after_request
+    def add_cors_headers(response: Response) -> Response:
+        """Agrega headers CORS a cada respuesta.
+
+        Args:
+            response: Respuesta generada por Flask.
+
+        Returns:
+            Respuesta con headers CORS aplicados.
+        """
+
+        origin = request.headers.get("Origin")
+        requested_headers = _get_requested_headers(request)
+
+        response.headers["Access-Control-Allow-Origin"] = origin or "*"
+        response.headers["Access-Control-Allow-Headers"] = requested_headers
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Vary"] = "Origin"
+
+        return response
 
 
 def register_error_handlers(app: Flask) -> None:
@@ -112,6 +145,23 @@ def register_error_handlers(app: Flask) -> None:
 
         app.logger.exception("Unhandled error: %s", error)
         return error_response("Ocurrio un error interno.", 500)
+
+
+def _get_requested_headers(current_request: Request) -> str:
+    """Resuelve los headers permitidos para CORS.
+
+    Args:
+        current_request: Request actual recibido por Flask.
+
+    Returns:
+        Lista de headers permitidos en formato texto.
+    """
+
+    requested_headers = current_request.headers.get("Access-Control-Request-Headers")
+    if requested_headers:
+        return requested_headers
+
+    return "Content-Type, Authorization"
 
 
 def _resolve_message(description: str | None, fallback: str, generic_values: set[str]) -> str:

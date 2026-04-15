@@ -1,4 +1,4 @@
-﻿"""Modelos simples para representar entidades de la API."""
+"""Modelos simples para representar entidades de la API."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ class Rifa:
         nombre: Nombre asociado a la rifa.
         telefono: Telefono opcional del participante.
         mail: Mail opcional del participante.
+        pagado: Estado de pago opcional.
         timestamp: Fecha de creacion en formato ISO 8601 UTC.
     """
 
@@ -23,6 +24,7 @@ class Rifa:
     nombre: str
     telefono: str | None
     mail: str | None
+    pagado: bool | None
     timestamp: str
 
     @classmethod
@@ -41,6 +43,7 @@ class Rifa:
             nombre=row["nombre"],
             telefono=row["telefono"],
             mail=row["mail"],
+            pagado=_parse_pagado(row["pagado"]),
             timestamp=row["timestamp"],
         )
 
@@ -56,5 +59,20 @@ class Rifa:
             "nombre": self.nombre,
             "telefono": self.telefono,
             "mail": self.mail,
+            "pagado": self.pagado,
             "timestamp": self.timestamp,
         }
+
+def _parse_pagado(value: int | None) -> bool | None:
+    """Convierte el valor SQLite de `pagado` a boolean o `None`.
+
+    Args:
+        value: Valor almacenado en SQLite.
+
+    Returns:
+        `True`, `False` o `None`.
+    """
+
+    if value is None:
+        return None
+    return bool(value)

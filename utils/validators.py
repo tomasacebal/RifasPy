@@ -1,4 +1,4 @@
-﻿"""Validaciones y parsing para requests JSON de rifas."""
+"""Validaciones y parsing para requests JSON de rifas."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from typing import Any
 from flask import Request
 from werkzeug.exceptions import BadRequest
 
-ALLOWED_FIELDS = {"numero", "nombre", "telefono", "mail"}
-UPDATABLE_FIELDS = {"nombre", "telefono", "mail"}
+ALLOWED_FIELDS = {"numero", "nombre", "telefono", "mail", "pagado"}
+UPDATABLE_FIELDS = {"nombre", "telefono", "mail", "pagado"}
 MAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -57,6 +57,7 @@ def validate_create_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "nombre": _normalize_nombre(payload["nombre"]),
         "telefono": _normalize_optional_text(payload.get("telefono"), "telefono"),
         "mail": _normalize_mail(payload.get("mail")),
+        "pagado": _normalize_pagado(payload.get("pagado")),
     }
 
 
@@ -82,6 +83,7 @@ def validate_put_payload(payload: dict[str, Any], path_numero: int) -> dict[str,
         "nombre": _normalize_nombre(payload["nombre"]),
         "telefono": _normalize_optional_text(payload.get("telefono"), "telefono"),
         "mail": _normalize_mail(payload.get("mail")),
+        "pagado": _normalize_pagado(payload.get("pagado")),
     }
 
 
@@ -113,6 +115,8 @@ def validate_patch_payload(payload: dict[str, Any], path_numero: int) -> dict[st
         normalized_payload["telefono"] = _normalize_optional_text(payload["telefono"], "telefono")
     if "mail" in payload:
         normalized_payload["mail"] = _normalize_mail(payload["mail"])
+    if "pagado" in payload:
+        normalized_payload["pagado"] = _normalize_pagado(payload["pagado"])
 
     return normalized_payload
 
@@ -266,3 +270,24 @@ def _normalize_mail(value: Any) -> str | None:
         raise BadRequest("El campo 'mail' debe tener un formato valido.")
 
     return normalized_value
+
+def _normalize_pagado(value: Any) -> bool | None:
+    """Valida y normaliza el campo `pagado`.
+
+    Args:
+        value: Valor a validar.
+
+    Returns:
+        Boolean o `None`.
+
+    Raises:
+        BadRequest: Si el valor no es `bool` ni `None`.
+    """
+
+    if value is None:
+        return None
+
+    if not isinstance(value, bool):
+        raise BadRequest("El campo 'pagado' debe ser boolean o null.")
+
+    return value

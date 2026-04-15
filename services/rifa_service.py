@@ -1,4 +1,4 @@
-﻿"""Servicios CRUD para la entidad `Rifa`."""
+"""Servicios CRUD para la entidad `Rifa`."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def list_rifas() -> list[Rifa]:
     connection = get_db()
     rows = connection.execute(
         """
-        SELECT numero, nombre, telefono, mail, timestamp
+        SELECT numero, nombre, telefono, mail, pagado, timestamp
         FROM rifas
         ORDER BY numero ASC
         """
@@ -39,7 +39,7 @@ def get_rifa(numero: int) -> Rifa | None:
     connection = get_db()
     row = connection.execute(
         """
-        SELECT numero, nombre, telefono, mail, timestamp
+        SELECT numero, nombre, telefono, mail, pagado, timestamp
         FROM rifas
         WHERE numero = ?
         """,
@@ -73,14 +73,15 @@ def create_rifa(payload: dict[str, object]) -> Rifa:
     connection = get_db()
     connection.execute(
         """
-        INSERT INTO rifas (numero, nombre, telefono, mail, timestamp)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO rifas (numero, nombre, telefono, mail, pagado, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         (
             numero,
             payload["nombre"],
             payload["telefono"],
             payload["mail"],
+            _serialize_pagado(payload["pagado"]),
             timestamp,
         ),
     )
@@ -111,13 +112,14 @@ def replace_rifa(numero: int, payload: dict[str, object]) -> Rifa | None:
     connection.execute(
         """
         UPDATE rifas
-        SET nombre = ?, telefono = ?, mail = ?
+        SET nombre = ?, telefono = ?, mail = ?, pagado = ?
         WHERE numero = ?
         """,
         (
             payload["nombre"],
             payload["telefono"],
             payload["mail"],
+            _serialize_pagado(payload["pagado"]),
             numero,
         ),
     )
@@ -144,18 +146,20 @@ def update_rifa_partial(numero: int, payload: dict[str, object]) -> Rifa | None:
     updated_nombre = payload.get("nombre", current_rifa.nombre)
     updated_telefono = payload.get("telefono", current_rifa.telefono)
     updated_mail = payload.get("mail", current_rifa.mail)
+    updated_pagado = payload.get("pagado", current_rifa.pagado)
 
     connection = get_db()
     connection.execute(
         """
         UPDATE rifas
-        SET nombre = ?, telefono = ?, mail = ?
+        SET nombre = ?, telefono = ?, mail = ?, pagado = ?
         WHERE numero = ?
         """,
         (
             updated_nombre,
             updated_telefono,
             updated_mail,
+            _serialize_pagado(updated_pagado),
             numero,
         ),
     )
@@ -191,3 +195,18 @@ def build_timestamp() -> str:
     """
 
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _serialize_pagado(value: bool | None) -> int | None:
+    """Convierte el valor de `pagado` al formato persistible en SQLite.
+
+    Args:
+        value: Valor validado del payload o del modelo.
+
+    Returns:
+        `1`, `0` o `None`.
+    """
+
+    if value is None:
+        return None
+    return int(value)
