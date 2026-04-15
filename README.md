@@ -1,7 +1,5 @@
 # API REST de Rifas
 
-<<<<<<< Updated upstream
-=======
 API REST simple para administrar rifas con Flask y SQLite.
 
 ## Caracteristicas
@@ -11,7 +9,6 @@ API REST simple para administrar rifas con Flask y SQLite.
 - CORS habilitado para requests normales y preflight `OPTIONS`
 - Base SQLite autoinicializada con migracion automatica de la columna `pagado`
 
->>>>>>> Stashed changes
 ## Requisitos
 - Python 3.10 o superior
 - pip
